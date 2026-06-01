@@ -1,6 +1,6 @@
 # Sistema de Gestión de Estudiantes API
 
-Una API RESTful construida con Python y FastAPI para la gestión y nivelación de estudiantes.
+Una API REST-ful construida con Python y FastAPI para la gestión y nivelación de estudiantes.
 
 ## Instalación
 
