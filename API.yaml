@@ -1,0 +1,58 @@
+openapi: 3.0.3
+info:
+  title: API de Gestión de Estudiantes
+  version: 1.0.0
+  description: Contrato de la API para administrar el registro y las notas de diagnóstico de los estudiantes.
+paths:
+  /estudiantes:
+    get:
+      summary: Obtener todos los estudiantes
+      responses:
+        '200':
+          description: Lista de estudiantes recuperada con éxito.
+    post:
+      summary: Crear un nuevo estudiante
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Estudiante'
+      responses:
+        '201':
+          description: Estudiante creado con éxito.
+        '400':
+          description: El estudiante ya existe.
+  /estudiantes/{estudiante_id}:
+    get:
+      summary: Obtener un estudiante por ID
+      parameters:
+        - name: estudiante_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Datos del estudiante.
+        '404':
+          description: Estudiante no encontrado.
+components:
+  schemas:
+    Estudiante:
+      type: object
+      required:
+        - id
+        - nombre
+        - curso
+        - calificacion_diagnostico
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        curso:
+          type: string
+        calificacion_diagnostico:
+          type: number
+          format: float
