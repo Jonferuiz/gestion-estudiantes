@@ -1,0 +1,178 @@
+openapi: 3.0.3
+info:
+  title: API de EcoRutas
+  description: API RESTful para cálculo de rutas de tránsito optimizadas (eco-routing) y envío de telemetría de forma eficiente y segura.
+  version: 1.0.0
+  contact:
+    name: Jhonathan Alejandro Fernández Ruiz
+    email: admin@ecorutas.ejemplo.ec
+servers:
+  - url: https://api.ecorutas.ec/v1
+    description: Servidor de Producción
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RouteResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+          properties:
+            route_id:
+              type: string
+              example: rt_84759384
+            total_distance_km:
+              type: number
+              example: 12.5
+            estimated_time_mins:
+              type: integer
+              example: 25
+            co2_emissions_kg:
+              type: number
+              example: 1.2
+            co2_saved_kg:
+              type: number
+              example: 0.4
+            geometry:
+              type: string
+              example: encoded_polyline_string_here
+            waypoints:
+              type: array
+              items:
+                type: object
+                properties:
+                  lat:
+                    type: number
+                    example: -3.2581
+                  lng:
+                    type: number
+                    example: -79.9554
+    TelemetrySyncRequest:
+      type: object
+      required:
+        - route_id
+        - locations
+      properties:
+        route_id:
+          type: string
+          example: rt_84759384
+        locations:
+          type: array
+          items:
+            type: object
+            required:
+              - timestamp
+              - lat
+              - lng
+              - speed_kmh
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+                example: "2026-07-19T18:30:00Z"
+              lat:
+                type: number
+                example: -3.2581
+              lng:
+                type: number
+                example: -79.9554
+              speed_kmh:
+                type: number
+                example: 45
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        error_code:
+          type: string
+          example: MISSING_PARAMETER
+        message:
+          type: string
+          example: El parámetro 'dest_lat' es obligatorio.
+security:
+  - bearerAuth: []
+paths:
+  /routes/calculate:
+    get:
+      summary: Calcular Ruta Óptima (Eco-Routing)
+      description: Calcula la ruta más eficiente entre dos puntos, priorizando el menor consumo de combustible y la evasión de tráfico pesado.
+      parameters:
+        - name: origin_lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: origin_lng
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: dest_lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: dest_lng
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: vehicle_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [gasoline, diesel, electric, hybrid]
+            default: gasoline
+      responses:
+        '200':
+          description: Ruta calculada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tracking/sync:
+    post:
+      summary: Sincronización de Ubicación (Ping Batching)
+      description: Recibe paquetes de coordenadas del usuario durante un viaje activo en lotes (batching) para reducir el consumo de red y batería.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetrySyncRequest'
+      responses:
+        '202':
+          description: Datos de telemetría procesados correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Datos de telemetría procesados correctamente.
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
